@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steam Homepage</title>
+    <title>Steam Homepage - Final</title>
     <style>
-        /* Подключение шрифта Gilroy */
         @font-face {
             font-family: 'Gilroy';
             src: url('https://db.onlinewebfonts.com/t/1dc8ecd8056a0f5aa767ca893f544ca3.woff2') format('woff2');
@@ -22,7 +21,7 @@
             --card-bg: #111111;
             --input-bg: #1a1a1a;
             --border-color: #222222;
-            --text-placeholder: #555555;
+            --accent: #3e00ff;
             --gradient: linear-gradient(90deg, #9b00ff 0%, #3e00ff 100%);
         }
 
@@ -36,15 +35,16 @@
             align-items: center;
             height: 100vh;
             overflow: hidden;
-            user-select: none;
         }
 
+        /* Контейнер */
         .card {
             background-color: var(--card-bg);
             width: 760px;
             padding: 70px 65px;
             border-radius: 40px;
             border: 1px solid var(--border-color);
+            position: relative;
         }
 
         h1 {
@@ -55,16 +55,9 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: inline-block;
-            letter-spacing: -0.02em;
         }
 
-        h2 {
-            font-size: 38px;
-            font-weight: 400;
-            margin: 0 0 45px 0;
-            color: #ffffff;
-            letter-spacing: -0.03em;
-        }
+        h2 { font-size: 38px; font-weight: 400; margin: 0 0 45px 0; }
 
         input[type="text"] {
             width: 100%;
@@ -78,22 +71,9 @@
             outline: none;
             box-sizing: border-box;
             margin-bottom: 35px;
-            transition: border-color 0.2s;
         }
 
-        input[type="text"]:focus {
-            border-color: #3e00ff;
-        }
-
-        input[type="text"]::placeholder {
-            color: var(--text-placeholder);
-        }
-
-        .tags {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
+        .tags { display: flex; gap: 15px; flex-wrap: wrap; }
 
         .tag {
             background-color: var(--input-bg);
@@ -105,43 +85,62 @@
             color: #ffffff;
             text-decoration: none;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
             cursor: pointer;
             transition: 0.2s;
         }
 
-        .tag:hover {
-            background-color: #222;
-            border-color: #333;
-            transform: translateY(-2px);
-        }
+        .tag:hover { background-color: #222; transform: translateY(-2px); }
 
-        /* Кнопка плюс */
-        .fab {
+        /* Модальное окно (Форма добавления/ред.) */
+        #modal-overlay {
             position: fixed;
-            bottom: 40px;
-            right: 40px;
-            width: 55px;
-            height: 55px;
-            background-color: #1a1a1a;
-            border: 1px solid var(--border-color);
-            border-radius: 50%;
-            display: flex;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
-            color: #555;
-            font-size: 28px;
-            transition: 0.3s;
+            z-index: 2000;
         }
 
-        .fab:hover {
+        .modal-form {
+            background: #151515;
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid #333;
+            width: 400px;
+        }
+
+        .modal-form input {
+            width: 100%;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 15px;
             color: #fff;
-            border-color: #444;
-            transform: rotate(90deg);
+            margin-bottom: 15px;
+            outline: none;
+            box-sizing: border-box;
+            font-family: 'Gilroy', sans-serif;
         }
 
-        /* Компактное контекстное меню */
+        .modal-buttons { display: flex; gap: 10px; }
+
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 15px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Gilroy', sans-serif;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .btn-save { background: var(--accent); color: white; }
+        .btn-cancel { background: #333; color: #ccc; }
+        .modal-btn:hover { opacity: 0.8; }
+
+        /* ПКМ Меню */
         #context-menu {
             position: absolute;
             display: none;
@@ -151,7 +150,6 @@
             padding: 4px 0;
             z-index: 1000;
             min-width: 160px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
 
         #context-menu div {
@@ -159,19 +157,17 @@
             cursor: pointer;
             font-size: 14px;
             color: #ccc;
-            transition: 0.2s;
         }
 
-        #context-menu div:hover {
-            background: #252525;
-            color: #9b00ff;
-        }
+        #context-menu div:hover { background: #252525; color: #9b00ff; }
+        .menu-sep { height: 1px; background: #262626; margin: 2px 0; }
 
-        .menu-sep {
-            height: 1px;
-            background: #262626;
-            margin: 2px 0;
-            padding: 0 !important;
+        .fab {
+            position: fixed; bottom: 40px; right: 40px;
+            width: 55px; height: 55px; background: #1a1a1a;
+            border: 1px solid var(--border-color); border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; color: #555; font-size: 28px;
         }
     </style>
 </head>
@@ -180,111 +176,106 @@
     <div class="card">
         <h1>Hello, Daniil.</h1>
         <h2>What are you looking for?</h2>
-        
         <input type="text" id="searchInp" placeholder="Search Google..." autocomplete="off">
-
-        <div class="tags" id="bookmarkList">
-            </div>
+        <div class="tags" id="bookmarkList"></div>
     </div>
 
-    <div class="fab" onclick="addBookmark()">+</div>
+    <div class="fab" onclick="openModal()">+</div>
+
+    <div id="modal-overlay">
+        <div class="modal-form">
+            <h3 style="margin-top: 0;">Bookmark Details</h3>
+            <input type="text" id="bm-name" placeholder="Site Name (e.g. YouTube)">
+            <input type="text" id="bm-url" placeholder="URL (https://...)">
+            <div class="modal-buttons">
+                <button class="modal-btn btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn btn-save" onclick="saveBookmark()">Save</button>
+            </div>
+        </div>
+    </div>
 
     <div id="context-menu">
-        <div onclick="editBookmark()">Edit Bookmark</div>
+        <div onclick="prepEdit()">Edit Bookmark</div>
         <div class="menu-sep"></div>
-        <div onclick="deleteBookmark()" style="color: #ff4b4b;">Delete Bookmark</div>
+        <div onclick="deleteBookmark()" style="color: #ff4b4b;">Delete</div>
     </div>
 
     <script>
-        const searchInp = document.getElementById('searchInp');
         const bookmarkList = document.getElementById('bookmarkList');
+        const modal = document.getElementById('modal-overlay');
         const ctxMenu = document.getElementById('context-menu');
-        let selectedIdx = null;
-
-        // 1. Логика поиска Google
-        searchInp.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && searchInp.value.trim() !== "") {
-                window.location.href = `https://www.google.com/search?q=${encodeURIComponent(searchInp.value)}`;
-            }
-        });
-
-        // 2. Управление данными закладок
         let bookmarks = JSON.parse(localStorage.getItem('my_bookmarks')) || [
             { name: 'Cybershoke', url: 'https://cybershoke.net' },
-            { name: 'Faceit', url: 'https://faceit.com' },
-            { name: 'Steam', url: 'https://store.steampowered.com' }
+            { name: 'Faceit', url: 'https://faceit.com' }
         ];
+        let editIdx = null;
+        let selectedIdx = null;
 
-        // Отрисовка списка
+        // Поиск
+        document.getElementById('searchInp').onkeypress = (e) => {
+            if (e.key === 'Enter') window.location.href = `https://www.google.com/search?q=${e.target.value}`;
+        };
+
         function render() {
             bookmarkList.innerHTML = '';
-            bookmarks.forEach((bm, index) => {
+            bookmarks.forEach((bm, i) => {
                 const a = document.createElement('a');
                 a.className = 'tag';
                 a.innerText = bm.name;
                 a.href = bm.url;
-                // Steam Browser часто открывает ссылки в том же окне, 
-                // если нужно в новом — добавьте a.target = "_blank";
-                
-                // Обработка правой кнопки мыши
                 a.oncontextmenu = (e) => {
                     e.preventDefault();
-                    showCtx(e, index);
+                    selectedIdx = i;
+                    ctxMenu.style.display = 'block';
+                    ctxMenu.style.left = e.pageX + 'px';
+                    ctxMenu.style.top = e.pageY + 'px';
                 };
                 bookmarkList.appendChild(a);
             });
             localStorage.setItem('my_bookmarks', JSON.stringify(bookmarks));
         }
 
-        // Добавление
-        function addBookmark() {
-            const name = prompt("Название сайта:");
-            const url = prompt("URL адрес (с https://):", "https://");
-            if (name && url) {
-                bookmarks.push({ name, url });
-                render();
-            }
+        // Модальное окно
+        function openModal() {
+            editIdx = null;
+            document.getElementById('bm-name').value = '';
+            document.getElementById('bm-url').value = 'https://';
+            modal.style.display = 'flex';
         }
 
-        // Вызов контекстного меню
-        function showCtx(e, index) {
-            selectedIdx = index;
-            ctxMenu.style.display = 'block';
-            ctxMenu.style.left = e.pageX + 'px';
-            ctxMenu.style.top = e.pageY + 'px';
+        function closeModal() { modal.style.display = 'none'; }
+
+        function saveBookmark() {
+            const name = document.getElementById('bm-name').value;
+            const url = document.getElementById('bm-url').value;
+            if(!name || !url) return;
+
+            if(editIdx !== null) bookmarks[editIdx] = {name, url};
+            else bookmarks.push({name, url});
+            
+            render();
+            closeModal();
         }
 
-        // Редактирование
-        function editBookmark() {
-            if (selectedIdx !== null) {
-                const current = bookmarks[selectedIdx];
-                const newName = prompt("Изменить название:", current.name);
-                const newUrl = prompt("Изменить URL:", current.url);
-                
-                if (newName && newUrl) {
-                    bookmarks[selectedIdx] = { name: newName, url: newUrl };
-                    render();
-                }
-            }
+        function prepEdit() {
+            editIdx = selectedIdx;
+            document.getElementById('bm-name').value = bookmarks[editIdx].name;
+            document.getElementById('bm-url').value = bookmarks[editIdx].url;
             ctxMenu.style.display = 'none';
+            modal.style.display = 'flex';
         }
 
-        // Удаление
         function deleteBookmark() {
-            if (selectedIdx !== null) {
-                if(confirm(`Удалить закладку ${bookmarks[selectedIdx].name}?`)) {
-                    bookmarks.splice(selectedIdx, 1);
-                    render();
-                }
-            }
+            bookmarks.splice(selectedIdx, 1);
+            render();
             ctxMenu.style.display = 'none';
         }
 
-        // Закрытие меню при клике в любое место или нажатии Esc
-        window.onclick = () => ctxMenu.style.display = 'none';
-        window.onkeydown = (e) => { if(e.key === "Escape") ctxMenu.style.display = 'none'; };
+        window.onclick = (e) => {
+            if(e.target == modal) closeModal();
+            ctxMenu.style.display = 'none';
+        };
 
-        // Инициализация
         render();
     </script>
 </body>
