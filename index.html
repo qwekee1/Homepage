@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam Home</title>
+    <link rel="stylesheet" href="https://static.tildacdn.com/css/tilda-fonts.css">
+    <style>
+        :root {
+            --bg-color: #131314;
+            --tile-color: #1e1f20; /* Цвет как у поиска */
+            --tile-hover: #28292a;
+            --text-color: #e3e3e3;
+            --sub-text: #8e918f;
+            --font-main: "TildaSans", Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            font-family: var(--font-main);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 840px;
+            margin-bottom: 24px;
+            text-align: left;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .header .greeting {
+            background: linear-gradient(90deg, #4285f4, #9b72cb, #d96570);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .sub {
+            color: var(--sub-text);
+            font-weight: 500;
+        }
+
+        /* Поиск с лупой */
+        .search-container {
+            width: 100%;
+            max-width: 840px;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 22px 60px 22px 28px; /* Место справа под лупу */
+            border-radius: 28px;
+            border: 1px solid transparent;
+            background: var(--tile-color);
+            color: #fff;
+            font-size: 16px;
+            font-family: var(--font-main);
+            font-weight: 500;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            background: var(--tile-hover);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            fill: var(--sub-text);
+            pointer-events: none;
+        }
+
+        /* Закладки 1:1 как поиск */
+        .bookmarks-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            max-width: 840px;
+            width: 100%;
+        }
+
+        .bookmark {
+            background: var(--tile-color);
+            padding: 22px 28px; /* Такая же высота и отступы как у поиска */
+            border-radius: 28px; /* Такое же скругление */
+            cursor: pointer;
+            user-select: none;
+            transition: 0.2s;
+            text-decoration: none;
+            color: #fff; /* Цвет текста как в поиске */
+            font-size: 16px; /* Размер шрифта как в поиске */
+            font-weight: 500;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+
+        .bookmark:hover {
+            background: var(--tile-hover);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .bookmark.dragging { opacity: 0.2; }
+
+        .add-btn {
+            position: fixed; bottom: 32px; right: 32px; width: 56px; height: 56px;
+            border-radius: 16px; background: #1e1f20; border: 1px solid #3c4043;
+            color: #fff; font-size: 28px; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .add-btn:hover { background: #3c4043; transform: scale(1.05); }
+
+        /* Модалка */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;
+            backdrop-filter: blur(8px);
+        }
+        .modal-content { 
+            background: #28292a; padding: 32px; border-radius: 28px; width: 340px; 
+            border: 1px solid #3c4043;
+        }
+        .modal-content input {
+            width: 100%; padding: 14px 18px; margin-bottom: 12px; border-radius: 14px;
+            border: 1px solid #3c4043; background: #131314; color: white; 
+            font-family: var(--font-main); box-sizing: border-box; outline: none;
+        }
+        .btn-save { background: #fff; color: #000; padding: 10px 24px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .btn-cancel { background: transparent; color: var(--sub-text); border: none; cursor: pointer; font-family: inherit; font-weight: 600; }
+
+        #context-menu {
+            position: fixed; display: none; background: #28292a; border-radius: 12px;
+            padding: 8px 0; z-index: 1000; border: 1px solid #3c4043; min-width: 140px;
+        }
+        .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #fff; }
+        .menu-item:hover { background: #3c4043; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>
+            <span class="greeting">Hello, Daniil.</span><br>
+            <span class="sub">What are you looking for?</span>
+        </h1>
+    </div>
+
+    <div class="search-container">
+        <form action="https://www.google.com/search" method="GET" class="search-box">
+            <input type="text" name="q" placeholder="What are you looking" autocomplete="off" autofocus>
+            <svg class="search-icon" viewBox="0 0 24 24">
+                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+        </form>
+    </div>
+
+    <div class="bookmarks-grid" id="bookmarks-grid"></div>
+
+    <button class="add-btn" onclick="openModal()">+</button>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">New Bookmark</h3>
+            <input type="text" id="bm-name" placeholder="Name">
+            <input type="text" id="bm-url" placeholder="URL">
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:8px;">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-save" onclick="saveForm()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="context-menu">
+        <div class="menu-item" onclick="openModal(true)">Edit</div>
+        <div class="menu-item" onclick="deleteBookmark()">Delete</div>
+    </div>
+
+    <script>
+        const grid = document.getElementById('bookmarks-grid');
+        const modal = document.getElementById('modal');
+        const contextMenu = document.getElementById('context-menu');
+        
+        let bookmarks = JSON.parse(localStorage.getItem('steam-bookmarks')) || [
+            { name: 'Cybershoke', url: 'https://cybershoke.net' },
+            { name: 'Faceit', url: 'https://faceit.com' },
+            { name: 'Steam', url: 'https://steampowered.com' }
+        ];
+
+        let currentIdx = null;
+        let isEditing = false;
+
+        function render() {
+            grid.innerHTML = '';
+            bookmarks.forEach((bm, i) => {
+                const a = document.createElement('a');
+                a.className = 'bookmark';
+                a.href = bm.url;
+                a.textContent = bm.name;
+                a.draggable = true;
+                
+                a.oncontextmenu = (e) => {
+                    e.preventDefault();
+                    currentIdx = i;
+                    contextMenu.style.display = 'block';
+                    contextMenu.style.left = e.pageX + 'px';
+                    contextMenu.style.top = e.pageY + 'px';
+                };
+
+                a.ondragstart = () => a.classList.add('dragging');
+                a.ondragend = () => a.classList.remove('dragging');
+                
+                grid.appendChild(a);
+            });
+        }
+
+        function openModal(edit = false) {
+            isEditing = edit;
+            document.getElementById('modal-title').textContent = edit ? 'Edit Bookmark' : 'New Bookmark';
+            if(edit) {
+                document.getElementById('bm-name').value = bookmarks[currentIdx].name;
+                document.getElementById('bm-url').value = bookmarks[currentIdx].url;
+            } else {
+                document.getElementById('bm-name').value = '';
+                document.getElementById('bm-url').value = '';
+            }
+            modal.style.display = 'flex';
+            contextMenu.style.display = 'none';
+        }
+
+        function closeModal() { modal.style.display = 'none'; }
+
+        function saveForm() {
+            const name = document.getElementById('bm-name').value.trim();
+            let url = document.getElementById('bm-url').value.trim();
+            if(name && url) {
+                if (!url.startsWith('http')) url = 'https://' + url;
+                if(isEditing) bookmarks[currentIdx] = { name, url };
+                else bookmarks.push({ name, url });
+                localStorage.setItem('steam-bookmarks', JSON.stringify(bookmarks));
+                render();
+                closeModal();
+            }
+        }
+
+        function deleteBookmark() {
+            if (currentIdx !== null) {
+                bookmarks.splice(currentIdx, 1);
+                localStorage.setItem('steam-bookmarks', JSON.stringify(bookmarks));
+                render();
+                contextMenu.style.display = 'none';
+            }
+        }
+
+        grid.ondragover = e => {
+            e.preventDefault();
+            const draggingItem = document.querySelector('.dragging');
+            if (!draggingItem) return;
+            const siblings = [...grid.querySelectorAll('.bookmark:not(.dragging)')];
+            const next = siblings.find(s => {
+                const box = s.getBoundingClientRect();
+                return e.clientX <= box.left + box.width/2 && e.clientY <= box.top + box.height/2;
+            });
+            grid.insertBefore(draggingItem, next || null);
+        };
+
+        grid.ondragend = () => {
+            bookmarks = [...grid.querySelectorAll('.bookmark')].map(el => ({
+                name: el.textContent,
+                url: el.href
+            }));
+            localStorage.setItem('steam-bookmarks', JSON.stringify(bookmarks));
+        };
+
+        window.onclick = (e) => {
+            if(e.target == modal) closeModal();
+            if(!contextMenu.contains(e.target)) contextMenu.style.display = 'none';
+        };
+
+        render();
+    </script>
+</body>
+</html>
